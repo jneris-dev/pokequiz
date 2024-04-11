@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.poke-font {
+    font-family: 'Pokemon Solid', sans-serif;
+    color: #ffff00;
+    text-align: center;
+    line-height: 1.4;
+    letter-spacing: 3px;
+    grid-area: head;
+    text-shadow: 4px 0 #0000ff, -4px 0 #0000ff, 0 4px #0000ff, 0 -4px #0000ff,
+               3px 3px #0000ff, -3px -3px #0000ff, 3px -3px #0000ff, -3px 3px #0000ff;
+}
+
+.background {
+    background: rgb(255,70,36);
+    background: linear-gradient(0deg, rgba(255,70,36,1) 0%, rgba(255,0,0,1) 100%);
+}
+
+.flash {
+    filter: invert(1) brightness(2);
+}
+
+.ocult {
+    @apply brightness-0
+}
