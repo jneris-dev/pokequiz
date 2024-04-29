@@ -1,4 +1,57 @@
+import { useEffect, useState } from "react";
+
+import api from '../src/service/api';
+
 export function App() {
+  const NUMBER_POKEMONS = 151;
+
+  const [pokemons, setPokemons] = useState([]);
+  const [randomPoke, setRandomPoke] = useState({});
+  const [pokemon, setPokemon] = useState({});
+
+  async function handlePokemonsListDefault() {
+    const response = await api.get('/pokemon', {
+        params: {
+            limit: NUMBER_POKEMONS,
+        },
+    });
+
+    setPokemons(response.data.results);
+  };
+
+  function handlePokemonRandom() {
+    const number = Math.floor(Math.random() * (150 - 0 + 1) + 0)
+
+    setRandomPoke(pokemons[number])
+  };
+
+  useEffect(() => {
+    if(Object.keys(pokemons).length <= 0)
+      handlePokemonsListDefault();
+    else if(Object.keys(randomPoke).length <= 0)
+      handlePokemonRandom()
+  }, [pokemons]);
+
+  useEffect(() => {
+    	if (Object.keys(randomPoke).length > 0)
+        api.get(`/pokemon/${randomPoke.name}`).then(response => {
+          const { id, types, sprites, name } = response.data;
+
+          let typeColor = types[0].type.name;
+
+          if (typeColor === 'normal' && types.length > 1) {
+            typeColor = types[1].type.name;
+          }
+
+          setPokemon({
+            name,
+            id,
+            image: sprites.other['official-artwork'].front_default,
+            type: types
+          });
+        });
+	}, [randomPoke]);
+
   return (
     <main className="background relative min-h-screen w-full flex flex-col items-center py-8 px-5">
       <div className="w-full max-w-[800px] flex flex-col justify-center items-center">
@@ -8,27 +61,32 @@ export function App() {
         <div className="w-full relative flex flex-col justify-center items-center">
           <figure className="relative flex items-center justify-center w-[650px] max-w-full h-[600px] select-none">
             <img src="/assets/flash.png" className="flash absolute inset-0 max-w-full h-full mx-auto pointer-events-none" alt="" />
-            <img
-              src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png"
-              className="relative max-w-full h-auto w-[400px] ocult pointer-events-none transition-all duration-500"
-              alt=""
-            />
+            {pokemon ?
+              <img
+                src={pokemon.image}
+                className="relative max-w-full h-auto w-[400px] ocult pointer-events-none transition-all duration-500"
+                alt=""
+              />
+              :
+              null
+            }
           </figure>
           <div className="relative -mt-16 w-full max-w-[650px] flex items-center justify-center gap-3 select-none">
-            <div>
-              <img
-                src="https://archives.bulbagarden.net/media/upload/thumb/a/a8/Grass_icon_SwSh.png/64px-Grass_icon_SwSh.png"
-                className="max-w-full h-auto ocult pointer-events-none transition-all duration-500"
-                alt=""
-              />
-            </div>
-            <div>
-              <img
-                src="https://archives.bulbagarden.net/media/upload/thumb/8/8d/Poison_icon_SwSh.png/64px-Poison_icon_SwSh.png"
-                className="max-w-full h-auto ocult pointer-events-none transition-all duration-500"
-                alt=""
-              />
-            </div>
+            {pokemon && pokemon.type ? 
+              pokemon.type.map((t, i) => {
+                return (
+                  <div key={i}>
+                    <img
+                      src={'/assets/types/' + t.type.name + '.png'}
+                      className="max-w-full w-20 h-auto ocult pointer-events-none transition-all duration-500"
+                      alt=""
+                    />
+                  </div>
+                )
+              })
+              :
+              null
+            }
           </div>
         </div>
         <div className="grid md:grid-cols-2 grid-cols-1 gap-4 w-full mt-8">
