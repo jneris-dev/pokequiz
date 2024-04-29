@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
+import seedrandom from 'seedrandom';
 
 import api from '../src/service/api';
 
 export function App() {
   const NUMBER_POKEMONS = 151;
 
-  const [pokemons, setPokemons] = useState([]);
-  const [randomPoke, setRandomPoke] = useState({});
   const [pokemon, setPokemon] = useState({});
+  const [alternatives, setAlternative] = useState([])
+  const [randomPoke, setRandomPoke] = useState('')
+  const [select, setSelect] = useState('')
+  const [status, setStatus] = useState('')
+
+  const pokeLocation = localStorage.getItem('pokemonSelected')
 
   async function handlePokemonsListDefault() {
     const response = await api.get('/pokemon', {
@@ -16,25 +21,39 @@ export function App() {
         },
     });
 
-    setPokemons(response.data.results);
-  };
+    var alts = [
+      response.data.results[randomPoke - 1].name,
+      response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
+      response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
+      response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
+    ];
 
-  function handlePokemonRandom() {
-    const number = Math.floor(Math.random() * (150 - 0 + 1) + 0)
-
-    setRandomPoke(pokemons[number])
+    setAlternative(
+      alts.map(value => ({ value, sort: Math.random() })).sort((a, b) => a.sort - b.sort).map(({ value }) => value)
+    )
   };
 
   useEffect(() => {
-    if(Object.keys(pokemons).length <= 0)
-      handlePokemonsListDefault();
-    else if(Object.keys(randomPoke).length <= 0)
-      handlePokemonRandom()
-  }, [pokemons]);
+    const dataAtual = new Date();
+
+    const dia = dataAtual.getDate();
+    const mes = dataAtual.getMonth() + 1;
+    const ano = dataAtual.getFullYear();
+
+    const dataString = `${dia}${mes}${ano}`;
+
+    const semente = parseInt(dataString);
+
+    seedrandom(semente, { global: true });
+
+    const numeroAleatorio = Math.floor(Math.random() * 152);
+
+    setRandomPoke(numeroAleatorio);
+  }, []);
 
   useEffect(() => {
-    	if (Object.keys(randomPoke).length > 0)
-        api.get(`/pokemon/${randomPoke.name}`).then(response => {
+    	if (randomPoke)
+        api.get(`/pokemon/${randomPoke}`).then(response => {
           const { id, types, sprites, name } = response.data;
 
           let typeColor = types[0].type.name;
@@ -52,8 +71,37 @@ export function App() {
         });
 	}, [randomPoke]);
 
+  useEffect(() => {
+    if(Object.keys(alternatives).length <= 0 && randomPoke)
+      handlePokemonsListDefault();
+  }, [alternatives, randomPoke]);
+
+  useEffect(() => {
+    if(select !== '') {
+      localStorage.setItem('pokemonSelected', select);
+
+      if(select === pokemon.name) {
+        setStatus(select)
+      } else {
+        setStatus('failed')
+      }
+    }
+  }, [select]);
+
+  useEffect(() => {
+    if(pokeLocation) {
+      setSelect(pokeLocation)
+
+      if(pokeLocation === pokemon.name) {
+        setStatus(select)
+      } else {
+        setStatus('failed')
+      }
+    }
+  }, [pokeLocation]);
+
   return (
-    <main className="background relative min-h-screen w-full flex flex-col items-center py-8 px-5">
+    <main className="background relative min-h-screen w-full flex flex-col items-center py-6 px-5">
       <div className="w-full max-w-[800px] flex flex-col justify-center items-center">
         <h1 className="text-6xl poke-font">
           Quem é esse pokémon?
@@ -63,7 +111,7 @@ export function App() {
             <img src="/assets/flash.png" className="flash absolute inset-0 max-w-full h-full mx-auto pointer-events-none" alt="" />
             {pokemon ?
               <img
-                src={pokemon.image}
+                src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${randomPoke}.png`}
                 className="relative max-w-full h-auto w-[400px] ocult pointer-events-none transition-all duration-500"
                 alt=""
               />
@@ -90,42 +138,20 @@ export function App() {
           </div>
         </div>
         <div className="grid md:grid-cols-2 grid-cols-1 gap-4 w-full mt-8">
-          <div className="w-full">
-            <input type="radio" id="option0" name="tabs" className="appearance-none hidden peer/option0" />
-            <label
-              htmlFor="option0"
-              className="cursor-pointer w-full rounded-full border-2 py-3 text-white font-bold text-lg flex items-center justify-center bg-transparent hover:bg-white hover:text-[#ff4624] transition-colors select-none peer-checked/option0:bg-white peer-checked/option0:text-[#ff4624]"
-            >
-              Charizard
-            </label>
-          </div>
-          <div className="w-full">
-            <input type="radio" id="option1" name="tabs" className="appearance-none hidden peer/option1" />
-            <label
-              htmlFor="option1"
-              className="cursor-pointer w-full rounded-full border-2 py-3 text-white font-bold text-lg flex items-center justify-center bg-transparent hover:bg-white hover:text-[#ff4624] transition-colors select-none peer-checked/option1:bg-white peer-checked/option1:text-[#ff4624]"
-            >
-              Bulbasaur
-            </label>
-          </div>
-          <div className="w-full">
-            <input type="radio" id="option2" name="tabs" className="appearance-none hidden peer/option2" />
-            <label
-              htmlFor="option2"
-              className="cursor-pointer w-full rounded-full border-2 py-3 text-white font-bold text-lg flex items-center justify-center bg-transparent hover:bg-white hover:text-[#ff4624] transition-colors select-none peer-checked/option2:bg-white peer-checked/option2:text-[#ff4624]"
-            >
-              Ivysaur
-            </label>
-          </div>
-          <div className="w-full">
-            <input type="radio" id="option3" name="tabs" className="appearance-none hidden peer/option3" />
-            <label
-              htmlFor="option3"
-              className="cursor-pointer w-full rounded-full border-2 py-3 text-white font-bold text-lg flex items-center justify-center bg-transparent hover:bg-white hover:text-[#ff4624] transition-colors select-none peer-checked/option3:bg-white peer-checked/option3:text-[#ff4624]"
-            >
-              Dialga
-            </label>
-          </div>
+          {alternatives.map((a, i) => {            
+            return (
+              <div className="w-full" key={i}>
+                <input type="radio" id={'option' + i} name="tabs" className={"appearance-none hidden peer/option" + i} />
+                <label
+                  htmlFor={'option' + i}
+                  className={`cursor-pointer w-full rounded-full border-2 py-3 text-white font-bold text-lg flex items-center justify-center hover:bg-white hover:text-[#ff4624] transition-colors select-none peer-checked/${'option' + i}:bg-white peer-checked/${'option' + i}:text-[#ff4624] capitalize${status === a || pokeLocation === a ? ' bg-green-300 pointer-events-none opacity-80' : status === 'failed' ? ' pointer-events-none opacity-80 bg-transparent' : ' bg-transparent'}`}
+                  onClick={() => setSelect(a)}
+                >
+                  {a}
+                </label>
+              </div>
+            )
+          })}
         </div>
       </div>
     </main>
