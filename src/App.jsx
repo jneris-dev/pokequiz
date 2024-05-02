@@ -12,7 +12,9 @@ export function App() {
   const [select, setSelect] = useState('')
   const [status, setStatus] = useState('')
 
-  const pokeLocation = localStorage.getItem('pokemonSelected')
+  const pokeLocation = JSON.parse(localStorage.getItem('pokemonSelected')) || undefined
+
+  const verify = pokeLocation && pokeLocation[convertDate(new Date())] ? pokeLocation[convertDate(new Date())].name : null
 
   async function handlePokemonsListDefault() {
     const response = await api.get('/pokemon', {
@@ -33,14 +35,24 @@ export function App() {
     )
   };
 
+  function convertDate(params) {
+    const day = params.getDate();
+    const month = params.getMonth() + 1;
+    const year = params.getFullYear();
+
+    const date = year + '-' + ("0" + month).slice(-2) + '-' + ("0" + day).slice(-2);
+    
+    return date
+  }
+
   useEffect(() => {
-    const dataAtual = new Date();
+    const dateCurrent = new Date();
 
-    const dia = dataAtual.getDate();
-    const mes = dataAtual.getMonth() + 1;
-    const ano = dataAtual.getFullYear();
+    const day = dateCurrent.getDate();
+    const month = dateCurrent.getMonth() + 1;
+    const year = dateCurrent.getFullYear();
 
-    const dataString = `${dia}${mes}${ano}`;
+    const dataString = `${day}${month}${year}`;
 
     const semente = parseInt(dataString);
 
@@ -77,8 +89,23 @@ export function App() {
   }, [alternatives, randomPoke]);
 
   useEffect(() => {
-    if(select !== '') {
-      localStorage.setItem('pokemonSelected', select);
+    if(select && select !== '') {
+      if(!pokeLocation) {  
+        localStorage.setItem('pokemonSelected', JSON.stringify({
+          [convertDate(new Date())]: {
+            name: select
+          }
+        }));
+      } else {
+        var newLocalStorage = {
+          ...pokeLocation, 
+          [convertDate(new Date())]: {
+            name: select
+          }
+        }
+
+        localStorage.setItem('pokemonSelected', JSON.stringify(newLocalStorage));
+      }
 
       if(select === pokemon.name) {
         setStatus(select)
@@ -86,33 +113,33 @@ export function App() {
         setStatus('failed')
       }
     }
-  }, [select]);
+  }, [select, pokeLocation]);
 
   useEffect(() => {
-    if(pokeLocation) {
-      setSelect(pokeLocation)
+    if(verify && select === '') {
+      setSelect(verify)
 
-      if(pokeLocation === pokemon.name) {
+      if(verify === pokemon.name) {
         setStatus(select)
       } else {
         setStatus('failed')
       }
     }
-  }, [pokeLocation]);
+  }, [verify, select]);
 
   return (
     <main className="background relative min-h-screen w-full flex flex-col items-center py-6 px-5">
       <div className="w-full max-w-[800px] flex flex-col justify-center items-center">
-        <h1 className="text-6xl poke-font">
+        <h1 className="md:text-6xl text-4xl poke-font">
           Quem é esse pokémon?
         </h1>
         <div className="w-full relative flex flex-col justify-center items-center">
-          <figure className="relative flex items-center justify-center w-[650px] max-w-full h-[600px] select-none">
+          <figure className="relative flex items-center justify-center w-[650px] max-w-full md:h-[600px] h-[500px] select-none">
             <img src="/assets/flash.png" className="flash absolute inset-0 max-w-full h-full mx-auto pointer-events-none" alt="" />
             {pokemon ?
               <img
                 src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${randomPoke}.png`}
-                className="relative max-w-full h-auto w-[400px] ocult pointer-events-none transition-all duration-500"
+                className={`relative max-w-full h-auto w-[400px] pointer-events-none transition-all duration-500${select ? '' : ' ocult'}`}
                 alt=""
               />
               :
@@ -126,7 +153,7 @@ export function App() {
                   <div key={i}>
                     <img
                       src={'/assets/types/' + t.type.name + '.png'}
-                      className="max-w-full w-20 h-auto ocult pointer-events-none transition-all duration-500"
+                      className={`max-w-full md:w-20 w-12 h-auto pointer-events-none transition-all duration-500${select ? '' : ' ocult'}`}
                       alt=""
                     />
                   </div>
@@ -144,7 +171,7 @@ export function App() {
                 <input type="radio" id={'option' + i} name="tabs" className={"appearance-none hidden peer/option" + i} />
                 <label
                   htmlFor={'option' + i}
-                  className={`cursor-pointer w-full rounded-full border-2 py-3 text-white font-bold text-lg flex items-center justify-center hover:bg-white hover:text-[#ff4624] transition-colors select-none peer-checked/${'option' + i}:bg-white peer-checked/${'option' + i}:text-[#ff4624] capitalize${status === a || pokeLocation === a ? ' bg-green-300 pointer-events-none opacity-80' : status === 'failed' ? ' pointer-events-none opacity-80 bg-transparent' : ' bg-transparent'}`}
+                  className={`cursor-pointer w-full rounded-full border-2 py-3 text-white font-bold text-lg flex items-center justify-center hover:bg-white hover:text-[#ff4624] transition-colors select-none peer-checked/${'option' + i}:bg-white peer-checked/${'option' + i}:text-[#ff4624] capitalize${status === a && verify === a ? ' bg-green-500 pointer-events-none' : pokeLocation && verify && pokemon.name === a && verify !== a ? ' bg-green-500 pointer-events-none opacity-60' : status === 'failed' && verify === a ? ' bg-red-500 pointer-events-none' : verify ? ' pointer-events-none opacity-60 bg-transparent' : ' bg-transparent'}`}
                   onClick={() => setSelect(a)}
                 >
                   {a}
