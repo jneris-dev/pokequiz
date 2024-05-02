@@ -6,6 +6,7 @@ import api from '../src/service/api';
 export function App() {
   const NUMBER_POKEMONS = 151;
 
+  const [lastDate, setLastDate] = useState(new Date());
   const [pokemon, setPokemon] = useState({});
   const [alternatives, setAlternative] = useState([])
   const [randomPoke, setRandomPoke] = useState('')
@@ -126,6 +127,18 @@ export function App() {
       }
     }
   }, [verify, select]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const currentDate = new Date();
+      if (currentDate.getDate() !== lastDate.getDate()) {
+        window.location.reload()
+        setLastDate(currentDate);
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [lastDate]);
 
   return (
     <main className="background relative min-h-screen w-full flex flex-col items-center py-6 px-5">
