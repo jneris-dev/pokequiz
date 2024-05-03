@@ -6,7 +6,6 @@ import api from '../src/service/api';
 export function App() {
   const NUMBER_POKEMONS = 151;
 
-  const [lastDate, setLastDate] = useState(new Date());
   const [pokemon, setPokemon] = useState({});
   const [alternatives, setAlternative] = useState([])
   const [randomPoke, setRandomPoke] = useState('')
@@ -128,18 +127,6 @@ export function App() {
     }
   }, [verify, select]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const currentDate = new Date();
-      if (currentDate.getDate() !== lastDate.getDate()) {
-        window.location.reload()
-        setLastDate(currentDate);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [lastDate]);
-
   return (
     <main className="background relative min-h-screen w-full flex flex-col items-center py-6 px-5">
       <div className="w-full max-w-[800px] flex flex-col justify-center items-center">
@@ -177,14 +164,14 @@ export function App() {
             }
           </div>
         </div>
-        <div className="grid md:grid-cols-2 grid-cols-1 gap-4 w-full mt-8">
-          {alternatives.map((a, i) => {            
+        <div className="grid md:grid-cols-2 grid-cols-1 gap-4 w-full mt-8 relative">
+          {alternatives.map((a, i) => {        
             return (
               <div className="w-full" key={i}>
                 <input type="radio" id={'option' + i} name="tabs" className={"appearance-none hidden peer/option" + i} />
                 <label
                   htmlFor={'option' + i}
-                  className={`cursor-pointer w-full rounded-full border-2 py-3 text-white font-bold text-lg flex items-center justify-center hover:bg-white hover:text-[#ff4624] transition-colors select-none peer-checked/${'option' + i}:bg-white peer-checked/${'option' + i}:text-[#ff4624] capitalize${status === a && verify === a ? ' bg-green-500 pointer-events-none' : pokeLocation && verify && pokemon.name === a && verify !== a ? ' bg-green-500 pointer-events-none opacity-60' : status === 'failed' && verify === a ? ' bg-red-500 pointer-events-none' : verify ? ' pointer-events-none opacity-60 bg-transparent' : ' bg-transparent'}`}
+                  className={`cursor-pointer w-full rounded-full border-2 py-3 text-white font-bold text-lg flex items-center justify-center hover:bg-white hover:text-[#ff4624] transition-colors select-none capitalize${status === a && verify === a ? ' bg-green-500 pointer-events-none' : pokeLocation && verify && pokemon.name === a && verify !== a ? ' bg-green-500 pointer-events-none opacity-60' : status === 'failed' && verify && verify === a ? ' bg-red-700 pointer-events-none' : verify ? ' pointer-events-none opacity-60 bg-transparent' : ` bg-transparent peer-checked/${'option' + i}:bg-white peer-checked/${'option' + i}:text-[#ff4624]`}`}
                   onClick={() => setSelect(a)}
                 >
                   {a}
