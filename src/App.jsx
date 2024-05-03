@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import seedrandom from 'seedrandom';
 
 import api from '../src/service/api';
 
 export function App() {
   const NUMBER_POKEMONS = 151;
+
+  const player = useRef();
 
   const [pokemon, setPokemon] = useState({});
   const [alternatives, setAlternative] = useState([])
@@ -45,6 +47,12 @@ export function App() {
     return date
   }
 
+  function playVoice() {
+    var audio = player.current
+    audio.volume = 0.2;
+    audio.play()
+  }
+
   useEffect(() => {
     const dateCurrent = new Date();
 
@@ -66,7 +74,7 @@ export function App() {
   useEffect(() => {
     	if (randomPoke)
         api.get(`/pokemon/${randomPoke}`).then(response => {
-          const { id, types, sprites, name } = response.data;
+          const { id, types, sprites, name, cries } = response.data;
 
           let typeColor = types[0].type.name;
 
@@ -78,7 +86,8 @@ export function App() {
             name,
             id,
             image: sprites.other['official-artwork'].front_default,
-            type: types
+            type: types,
+            voices: cries
           });
         });
 	}, [randomPoke]);
@@ -153,7 +162,7 @@ export function App() {
                   <div key={i}>
                     <img
                       src={'/assets/types/' + t.type.name + '.png'}
-                      className={`max-w-full md:w-20 w-12 h-auto pointer-events-none transition-all duration-500${select ? '' : ' ocult'}`}
+                      className={`max-w-full lg:w-20 md:w-16 w-12 h-auto pointer-events-none transition-all duration-500${select ? '' : ' ocult'}`}
                       alt=""
                     />
                   </div>
@@ -163,6 +172,12 @@ export function App() {
               null
             }
           </div>
+            <audio id="voice" ref={player} className="hidden invisible">
+              <source
+                src={"https://raw.githubusercontent.com/PokeAPI/cries/main/cries/pokemon/latest/" + randomPoke +".ogg"}
+                type="audio/ogg"
+              />
+            </audio>
         </div>
         <div className="grid md:grid-cols-2 grid-cols-1 gap-4 w-full mt-8 relative">
           {alternatives.map((a, i) => {        
@@ -172,7 +187,10 @@ export function App() {
                 <label
                   htmlFor={'option' + i}
                   className={`cursor-pointer w-full rounded-full border-2 py-3 text-white font-bold text-lg flex items-center justify-center hover:bg-white hover:text-[#ff4624] transition-colors select-none capitalize${status === a && verify === a ? ' bg-green-500 pointer-events-none' : pokeLocation && verify && pokemon.name === a && verify !== a ? ' bg-green-500 pointer-events-none opacity-60' : status === 'failed' && verify && verify === a ? ' bg-red-700 pointer-events-none' : verify ? ' pointer-events-none opacity-60 bg-transparent' : ` bg-transparent peer-checked/${'option' + i}:bg-white peer-checked/${'option' + i}:text-[#ff4624]`}`}
-                  onClick={() => setSelect(a)}
+                  onClick={() => [
+                    setSelect(a),
+                    playVoice()
+                  ]}
                 >
                   {a}
                 </label>
