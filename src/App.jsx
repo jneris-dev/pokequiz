@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import seedrandom from 'seedrandom';
+import { Flip, ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 import api from '../src/service/api';
 
@@ -7,6 +9,7 @@ export function App() {
   const NUMBER_POKEMONS = 151;
 
   const player = useRef();
+  const toastRef = useRef(null);
 
   const [pokemon, setPokemon] = useState({});
   const [alternatives, setAlternative] = useState([])
@@ -118,8 +121,30 @@ export function App() {
 
       if(select === pokemon.name) {
         setStatus(select)
+
+        if(!toast.isActive(toastRef.current)) {
+          toast('🎉 ' + select.charAt(0).toUpperCase() + select.slice(1) + ' 🎉', {
+            position: "top-center",
+            icon: false,
+            transition: Flip,
+            hideProgressBar: true,
+            toastId: select,
+            autoClose: 3000,
+          });
+        }
       } else {
         setStatus('failed')
+
+        if(!toast.isActive(toastRef.current) && pokemon && pokemon.name) {
+          toast('😓 ' + pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1) + ' 😓', {
+            position: "top-center",
+            icon: false,
+            transition: Flip,
+            hideProgressBar: true,
+            toastId: select,
+            autoClose: 3000,
+          });
+        }
       }
     }
   }, [select, pokeLocation]);
@@ -199,6 +224,7 @@ export function App() {
           })}
         </div>
       </div>
+      <ToastContainer />
     </main>
   )
 }
