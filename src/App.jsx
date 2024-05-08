@@ -19,7 +19,7 @@ export function App() {
 
   const pokeLocation = JSON.parse(localStorage.getItem('pokemonSelected')) || undefined
 
-  const verify = pokeLocation && pokeLocation[convertDate(new Date())] ? pokeLocation[convertDate(new Date())].name : null
+  const verify = pokeLocation && pokeLocation[convertDate(new Date())] ? pokeLocation[convertDate(new Date())].selected : null
 
   async function handlePokemonsListDefault() {
     const response = await api.get('/pokemon', {
@@ -105,14 +105,18 @@ export function App() {
       if(!pokeLocation) {  
         localStorage.setItem('pokemonSelected', JSON.stringify({
           [convertDate(new Date())]: {
-            name: select
+            selected: select,
+            pokemon_of_day: pokemon,
+            answer: select === pokemon.name ? true : false
           }
         }));
       } else {
         var newLocalStorage = {
           ...pokeLocation, 
           [convertDate(new Date())]: {
-            name: select
+            selected: select,
+            pokemon_of_day: pokemon,
+            answer: select === pokemon.name ? true : false
           }
         }
 
