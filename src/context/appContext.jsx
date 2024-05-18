@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { ref, set } from "firebase/database";
 import seedrandom from 'seedrandom';
 
+import { database, signInWithGooglePopup, signOutUserApp } from "../utils/firebase.utils"
 import api from "../services/api";
 
 const AppContext = createContext({})
@@ -8,13 +10,10 @@ const AppContext = createContext({})
 export function AppContextProvider({ children }) {
     const NUMBER_POKEMONS = 151;
 
-    const tokenLoggedUser = localStorage.getItem("tokenLoggedUser") || undefined;
-    const pokeLocation = JSON.parse(localStorage.getItem('pokemonSelected')) || undefined
-    const verify = pokeLocation && pokeLocation[convertDate(new Date())] ? pokeLocation[convertDate(new Date())].selected : null
-
     const [pokemon, setPokemon] = useState({});
     const [alternatives, setAlternative] = useState([])
     const [randomPoke, setRandomPoke] = useState('')
+    const [user, setUser] = useState(null)
 
     async function handlePokemonsListDefault() {
         const response = await api.get('/pokemon', {
@@ -44,6 +43,41 @@ export function AppContextProvider({ children }) {
         
         return date
     }
+
+    async function handleSignIn() {
+        const response = await signInWithGooglePopup();
+        setUser(response.user)
+        sessionStorage.setItem("@AuthFirebase:token", response.user.accessToken)
+        sessionStorage.setItem("@AuthFirebase:user", JSON.stringify(response.user))
+    }
+
+    async function handleSignOut() {
+        await signOutUserApp()
+
+        sessionStorage.clear()
+        localStorage.clear()
+        setUser(null)
+
+        window.location.reload()
+        
+    }
+
+    useEffect(() => {
+        const sessionToken = sessionStorage.getItem("@AuthFirebase:token")
+        const sessionUser = sessionStorage.getItem("@AuthFirebase:user")
+
+        sessionToken && sessionUser ? setUser(JSON.parse(sessionUser)) : setUser(null)
+    }, []);
+
+    useEffect(() => {
+        if(user)
+            set(ref(database, `users/${user.uid}/author`), {
+                uid: user.uid,
+                username: user.displayName,
+                email: user.email,
+                profile_picture: user.photoURL
+            });
+    }, [user]);
 
     useEffect(() => {
         const dateCurrent = new Date();
@@ -91,13 +125,15 @@ export function AppContextProvider({ children }) {
 
     return (
         <AppContext.Provider value={{
-            tokenLoggedUser,
-            pokeLocation,
-            verify,
             pokemon,
             alternatives,
             randomPoke,
-            convertDate
+            convertDate,
+
+            user,
+            signed: !!user,
+            handleSignIn,
+            handleSignOut
         }}>
             {children}
         </AppContext.Provider>

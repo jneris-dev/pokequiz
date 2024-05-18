@@ -1,27 +1,27 @@
-import { Navigate, Route, Routes } from "react-router-dom";
-import ScrollToTop from "./ScrollToTop";
+import { useEffect } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
-import { PrivateRoute } from "./PrivateRoute";
-import { PublicRoute } from "./PublicRoute";
+import { PrivateRoutes } from "./PrivateRoutes";
 
 import { Login } from "../pages/Login";
 import { Game } from "../pages/Game";
 
 export function Router() {
+    const { pathname } = useLocation();
+
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [pathname]);
 
     return (
-        <ScrollToTop>
-            <Routes>
-                <Route path="*" element={<Navigate replace to="/" />} />
+        <Routes>
+            <Route path="*" element={<Navigate replace to="/" />} />
 
-                <Route element={<PublicRoute />}>
-                    <Route path="/" element={<Login />} />
-                {/* </Route>
+            <Route path="/" element={<Login />} />
 
-                <Route element={<PrivateRoute />}> */}
-                    <Route path="/game" element={<Game />} />
-                </Route>
-            </Routes>
-        </ScrollToTop>
+            <Route element={<PrivateRoutes />}>
+                <Route path="/game" element={<Game />} />
+            </Route>
+        </Routes>
     )
 }

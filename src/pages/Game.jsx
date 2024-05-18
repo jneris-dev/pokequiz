@@ -1,18 +1,26 @@
 import { useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { Flip, ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { push, ref, onValue } from "firebase/database";
 
 import { useAppContext } from "../context/appContext";
+import { database } from "../utils/firebase.utils";
+import { BtnSelect } from "../components/Button";
 
 export function Game() {
+    let location = useLocation();
 
     const player = useRef();
     const toastRef = useRef(null);
 
-    const { pokeLocation, pokemon, convertDate, verify, alternatives, randomPoke } = useAppContext();
+    const { pokemon, convertDate, alternatives, randomPoke, handleSignOut, user } = useAppContext();
 
     const [select, setSelect] = useState('')
     const [status, setStatus] = useState('')
+    const [userMenu, setUserMenu] = useState('')
+    const [verify, setVerify] = useState('');
+    const [baseUser, setBaseUser] = useState([]);
 
     function playVoice() {
         var audio = player.current
@@ -20,72 +28,158 @@ export function Game() {
         audio.play()
     }
 
-    useEffect(() => {
-        if(select && select !== '') {
-            if(!pokeLocation) {  
-                localStorage.setItem('pokemonSelected', JSON.stringify({
-                    [convertDate(new Date())]: {
-                        selected: select,
-                        pokemon_of_day: pokemon,
-                        answer: select === pokemon.name ? true : false
-                    }
-                }));
-            } else {
-                var newLocalStorage = {
-                    ...pokeLocation, 
-                    [convertDate(new Date())]: {
-                        selected: select,
-                        pokemon_of_day: pokemon,
-                        answer: select === pokemon.name ? true : false
-                    }
-                }
+    async function registerPokeSelect(data) {
+        const dataRef = ref(database, `users/${user.uid}/game`);
 
-                localStorage.setItem('pokemonSelected', JSON.stringify(newLocalStorage));
-            }
+        await push(dataRef, data);
+    }
 
-            if(select === pokemon.name) {
-                setStatus(select)
+    function handleSetOption(params) {
+        setSelect(params)
 
-                if(!toast.isActive(toastRef.current)) {
-                    toast('🎉 ' + select.charAt(0).toUpperCase() + select.slice(1) + ' 🎉', {
-                        position: "top-center",
-                        icon: false,
-                        transition: Flip,
-                        hideProgressBar: true,
-                        toastId: select,
-                        autoClose: 3000,
-                    });
-                }
-            } else {
-                setStatus('failed')
-
-                if(!toast.isActive(toastRef.current) && pokemon && pokemon.name) {
-                    toast('😓 ' + pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1) + ' 😓', {
-                        position: "top-center",
-                        icon: false,
-                        transition: Flip,
-                        hideProgressBar: true,
-                        toastId: select,
-                        autoClose: 3000,
-                    });
-                }
+        const data = {
+            [convertDate(new Date())]: {
+                selected: params,
+                pokemon_of_day: pokemon,
+                answer: params === pokemon.name ? true : false
             }
         }
-    }, [select, pokeLocation]);
+
+        if(!baseUser) {  
+            registerPokeSelect(data)
+        } else {
+            var newLocalStorage = {...baseUser, ...data}
+
+            registerPokeSelect(newLocalStorage)
+        }
+
+        if(params === pokemon.name) {
+            setStatus(params)
+
+            if(!toast.isActive(toastRef.current)) {
+                toast('🎉 ' + params.charAt(0).toUpperCase() + params.slice(1) + ' 🎉', {
+                    position: "top-center",
+                    icon: false,
+                    transition: Flip,
+                    hideProgressBar: true,
+                    toastId: params,
+                    autoClose: 3000,
+                });
+            }
+        } else {
+            setStatus('failed')
+
+            if(!toast.isActive(toastRef.current) && pokemon && pokemon.name) {
+                toast('😓 ' + pokemon.name.charAt(0).toUpperCase() + pokemon.name.slice(1) + ' 😓', {
+                    position: "top-center",
+                    icon: false,
+                    transition: Flip,
+                    hideProgressBar: true,
+                    toastId: params,
+                    autoClose: 3000,
+                });
+            }
+        }
+    }
 
     useEffect(() => {
-        if(verify && select === '') {
-            setSelect(verify)
+        const baseRef = ref(database, `users/${user.uid}/game`);
 
-            if(verify === pokemon.name)
+        const handleSetHistoric = onValue(baseRef, data => {
+            const dataValues = data.val();
+
+            const dataList = [];
+            for (let id in dataValues) {
+                dataList.push({ ...dataValues[id] });
+            }
+            setBaseUser(dataList);
+        }, {
+            onlyOnce: true
+        });
+
+        return () => { handleSetHistoric() };
+    }, [])
+
+    useEffect(() => {
+        if(baseUser && baseUser[convertDate(new Date())]) {
+            setVerify(baseUser[convertDate(new Date())].selected)
+
+            setSelect(baseUser[convertDate(new Date())].selected)
+
+            if(baseUser[convertDate(new Date())].selected === pokemon.name)
                 setStatus(select)
             else
                 setStatus('failed')
         }
-    }, [verify, select]);
+    }, [baseUser])
+
+    useEffect(() => {
+        const dropdownButton = document.getElementById('dropdown-button');
+        const dropdownMenu = document.getElementById('dropdown-menu');
+
+        window.addEventListener('click', (event) => {
+            if (!dropdownButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                setUserMenu(false);
+            }
+        });
+    }, [])
 
     return (
         <main className="background relative min-h-screen w-full flex flex-col items-center py-6 px-5">
+            <div className="absolute z-10 right-5 top-5">
+                <button
+                    id="dropdown-button"
+                    type="button"
+                    onClick={() => setUserMenu(!userMenu)}
+                    className="p-1 bg-neutral-50/30 rounded-full overflow-hidden hover:bg-neutral-50/40 transition-all w-16 h-16"
+                >
+                    {user.photoURL ?
+                        <img src={user.photoURL} className="max-w-full h-auto rounded-full" alt="" />
+                    :
+                        <div className="w-full h-full bg-neutral-50/30 rounded-full flex items-center justify-center">
+                            <span className="font-bold text-4xl leading-none text-white">
+                                {user.displayName.substring(0, 1)}
+                            </span>
+                        </div>
+                    }
+                </button>
+                <div
+                    id="dropdown-menu"
+                    className={`${userMenu ? 'block' : 'hidden'} origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}
+                >
+                    <div className="py-2 p-2" role="menu" aria-orientation="vertical" aria-labelledby="dropdown-button">
+                        <Link
+                            to={''}
+                            onClick={() => setUserMenu(false)}
+                            className="flex rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-blue-100 cursor-pointer" role="menuitem"
+                        >
+                            Perfil
+                        </Link>
+                        <Link
+                            to={''}
+                            onClick={() => setUserMenu(false)}
+                            className="flex rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-blue-100 cursor-pointer" role="menuitem"
+                        >
+                            Loja
+                        </Link>
+                        <Link
+                            to={''}
+                            onClick={() => setUserMenu(false)}
+                            className="flex rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-blue-100 cursor-pointer" role="menuitem"
+                        >
+                            Sobre
+                        </Link>
+                        <hr className="my-1" />
+                        <button
+                            type="button"
+                            onClick={handleSignOut}
+                            className="flex w-full rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-blue-100 cursor-pointer" role="menuitem"
+                        >
+                            Sair
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div className="w-full max-w-[800px] flex flex-col justify-center items-center">
                 <h1 className="md:text-6xl text-4xl poke-font">
                     Quem é esse pokémon?
@@ -128,26 +222,19 @@ export function Game() {
                     </audio>
                 </div>
                 <div className="grid md:grid-cols-2 grid-cols-1 gap-4 w-full mt-8 relative">
-                    {alternatives.map((a, i) => {        
+                    {alternatives.map((a, i) => {                
                         return (
-                            <div className="w-full" key={i}>
-                                <input
-                                    type="radio"
-                                    id={'option' + i}
-                                    name="tabs"
-                                    className={"appearance-none hidden peer/option" + i}
-                                />
-                                <label
-                                    htmlFor={'option' + i}
-                                    className={`cursor-pointer w-full rounded-full border-2 py-3 text-white font-bold text-lg flex items-center justify-center hover:bg-white hover:text-[#ff4624] transition-colors select-none capitalize${status === a && verify === a ? ' bg-green-500 pointer-events-none' : pokeLocation && verify && pokemon.name === a && verify !== a ? ' bg-green-500 pointer-events-none opacity-60' : status === 'failed' && verify && verify === a ? ' bg-red-700 pointer-events-none' : verify ? ' pointer-events-none opacity-60 bg-transparent' : ` bg-transparent peer-checked/${'option' + i}:bg-white peer-checked/${'option' + i}:text-[#ff4624]`}`}
-                                    onClick={() => {
-                                        setSelect(a),
-                                        playVoice()
-                                    }}
-                                >
-                                    {a}
-                                </label>
-                            </div>
+                            <BtnSelect
+                                key={i}
+                                i={i}
+                                a={a}
+                                status={status}
+                                verify={verify}
+                                baseUser={baseUser}
+                                pokemon={pokemon}
+                                handleSetOption={handleSetOption}
+                                playVoice={playVoice}
+                            />
                         )
                     })}
                 </div>
