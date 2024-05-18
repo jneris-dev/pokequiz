@@ -21,6 +21,8 @@ export function Game() {
     const [userMenu, setUserMenu] = useState('')
     const [verify, setVerify] = useState('');
     const [baseUser, setBaseUser] = useState([]);
+    const [history, setHistory] = useState({})
+    const [loading, setLoading] = useState(false)
 
     function playVoice() {
         var audio = player.current
@@ -45,13 +47,7 @@ export function Game() {
             }
         }
 
-        if(!baseUser) {  
-            registerPokeSelect(data)
-        } else {
-            var newLocalStorage = {...baseUser, ...data}
-
-            registerPokeSelect(newLocalStorage)
-        }
+        registerPokeSelect(data)
 
         if(params === pokemon.name) {
             setStatus(params)
@@ -85,6 +81,8 @@ export function Game() {
     useEffect(() => {
         const baseRef = ref(database, `users/${user.uid}/game`);
 
+        setLoading(true)
+
         const handleSetHistoric = onValue(baseRef, data => {
             const dataValues = data.val();
 
@@ -93,25 +91,48 @@ export function Game() {
                 dataList.push({ ...dataValues[id] });
             }
             setBaseUser(dataList);
+
+            setLoading(false)
         }, {
             onlyOnce: true
         });
 
         return () => { handleSetHistoric() };
-    }, [])
+    }, [location, select])
 
     useEffect(() => {
-        if(baseUser && baseUser[convertDate(new Date())]) {
-            setVerify(baseUser[convertDate(new Date())].selected)
+        let pokesObj = {};
 
-            setSelect(baseUser[convertDate(new Date())].selected)
+        baseUser.forEach(item => {
+            Object.keys(item).forEach(key => {
+                pokesObj[key] = item[key];
+            });
+        });
 
-            if(baseUser[convertDate(new Date())].selected === pokemon.name)
+        localStorage.setItem("@PokesUser", JSON.stringify(pokesObj))
+    }, [baseUser])
+
+    useEffect(() => {
+        let pokesUser = localStorage.getItem('@PokesUser');
+
+        if (pokesUser)
+            setHistory(JSON.parse(pokesUser))
+    }, [baseUser])
+
+    useEffect(() => {
+        let index = convertDate(new Date())
+
+        if(Object.keys(history).length > 0) {
+            setVerify(history[index].selected)
+
+            setSelect(history[index].selected)
+
+            if(history[index].selected === pokemon.name)
                 setStatus(select)
             else
                 setStatus('failed')
         }
-    }, [baseUser])
+    }, [history])
 
     useEffect(() => {
         const dropdownButton = document.getElementById('dropdown-button');
@@ -125,13 +146,13 @@ export function Game() {
     }, [])
 
     return (
-        <main className="background relative min-h-screen w-full flex flex-col items-center py-6 px-5">
-            <div className="absolute z-10 right-5 top-5">
+        <main className="background relative min-h-screen w-full flex flex-col items-center md:py-6 py-5 px-5">
+            <div className="absolute z-10 right-5 top-6">
                 <button
                     id="dropdown-button"
                     type="button"
                     onClick={() => setUserMenu(!userMenu)}
-                    className="p-1 bg-neutral-50/30 rounded-full overflow-hidden hover:bg-neutral-50/40 transition-all w-16 h-16"
+                    className="p-1 bg-neutral-50/30 rounded-full overflow-hidden hover:bg-neutral-50/40 transition-all md:w-16 md:h-16 w-12 h-12"
                 >
                     {user.photoURL ?
                         <img src={user.photoURL} className="max-w-full h-auto rounded-full" alt="" />
@@ -181,11 +202,11 @@ export function Game() {
                 </div>
             </div>
             <div className="w-full max-w-[800px] flex flex-col justify-center items-center">
-                <h1 className="md:text-6xl text-4xl poke-font">
+                <h1 className="md:text-6xl text-3xl poke-font">
                     Quem é esse pokémon?
                 </h1>
                 <div className="w-full relative flex flex-col justify-center items-center">
-                    <figure className="relative flex items-center justify-center w-[650px] max-w-full md:h-[600px] h-[500px] select-none">
+                    <figure className="relative flex items-center justify-center w-[650px] max-w-full md:h-[600px] h-[400px] select-none">
                         <img src="/assets/flash.png" className="flash absolute inset-0 max-w-full h-full mx-auto pointer-events-none" alt="" />
                         {pokemon ?
                             <img
@@ -197,7 +218,7 @@ export function Game() {
                             null
                         }
                     </figure>
-                    <div className="relative -mt-16 w-full max-w-[650px] flex items-center justify-center gap-3 select-none">
+                    <div className="relative md:-mt-16 -mt-8 w-full max-w-[650px] flex items-center justify-center gap-3 select-none">
                         {pokemon && pokemon.type ? 
                             pokemon.type.map((t, i) => {
                                 return (
@@ -221,7 +242,7 @@ export function Game() {
                         />
                     </audio>
                 </div>
-                <div className="grid md:grid-cols-2 grid-cols-1 gap-4 w-full mt-8 relative">
+                <div className={`grid md:grid-cols-2 grid-cols-1 gap-4 w-full md:mt-8 mt-5 relative group${loading ? ' loading' : ''}`}>
                     {alternatives.map((a, i) => {                
                         return (
                             <BtnSelect
@@ -230,6 +251,7 @@ export function Game() {
                                 a={a}
                                 status={status}
                                 verify={verify}
+                                history={history}
                                 baseUser={baseUser}
                                 pokemon={pokemon}
                                 handleSetOption={handleSetOption}
