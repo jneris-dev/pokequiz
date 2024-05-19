@@ -123,7 +123,7 @@ export function Game() {
     useEffect(() => {
         let index = convertDate(new Date())
 
-        if(Object.keys(history).length > 0) {
+        if(Object.keys(history).length > 0 && history[index]) {
             setVerify(history[index].selected)
 
             setSelect(history[index].selected)
