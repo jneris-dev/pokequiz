@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { ref, set } from "firebase/database";
+import { onValue, ref, set } from "firebase/database";
 import seedrandom from 'seedrandom';
 
 import { database, signInWithGooglePopup, signOutUserApp } from "../utils/firebase.utils"
@@ -14,8 +14,7 @@ export function AppContextProvider({ children }) {
     const [alternatives, setAlternative] = useState([])
     const [randomPoke, setRandomPoke] = useState('')
     const [user, setUser] = useState(null)
-
-    let pokesUser = JSON.parse(localStorage.getItem('@PokesUser'));
+    const [baseUser, setBaseUser] = useState({});
 
     async function handlePokemonsListDefault() {
         const response = await api.get('/pokemon', {
@@ -26,26 +25,29 @@ export function AppContextProvider({ children }) {
 
         let index = convertDate(new Date())
 
-        var alts = []
-
-        if(Object.keys(pokesUser).length > 0 && pokesUser[index])
-            alts = [
+        if(Object.keys(baseUser).length > 0 && baseUser[index]) {
+            var alts = [
                 response.data.results[randomPoke - 1].name,
-                pokesUser[index].selected,
-                response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
-                response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
-            ];
-        else
-            alts = [
-                response.data.results[randomPoke - 1].name,
-                response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
-                response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
-                response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
+                baseUser[index].selected,
+                response.data.results.filter(poke => poke.name !== response.data.results[randomPoke - 1].name && poke.name !== baseUser[index].selected)[Math.floor(Math.random() * (148 - 0 + 1) + 0)].name,
+                response.data.results.filter(poke => poke.name !== response.data.results[randomPoke - 1].name && poke.name !== baseUser[index].selected)[Math.floor(Math.random() * (148 - 0 + 1) + 0)].name,
             ];
 
-        setAlternative(
-            alts.map(value => ({ value, sort: Math.random() })).sort((a, b) => a.sort - b.sort).map(({ value }) => value)
-        )
+            setAlternative(
+                alts.map(value => ({ value, sort: Math.random() })).sort((a, b) => a.sort - b.sort).map(({ value }) => value)
+            )
+        } else {
+            var alts = [
+                response.data.results[randomPoke - 1].name,
+                response.data.results.filter(poke => poke.name !== response.data.results[randomPoke - 1].name)[Math.floor(Math.random() * (149 - 0 + 1) + 0)].name,
+                response.data.results.filter(poke => poke.name !== response.data.results[randomPoke - 1].name)[Math.floor(Math.random() * (149 - 0 + 1) + 0)].name,
+                response.data.results.filter(poke => poke.name !== response.data.results[randomPoke - 1].name)[Math.floor(Math.random() * (149 - 0 + 1) + 0)].name,
+            ];
+
+            setAlternative(
+                alts.map(value => ({ value, sort: Math.random() })).sort((a, b) => a.sort - b.sort).map(({ value }) => value)
+            )
+        }
     };
 
     function convertDate(params) {
@@ -73,7 +75,6 @@ export function AppContextProvider({ children }) {
         setUser(null)
 
         window.location.reload()
-        
     }
 
     useEffect(() => {
@@ -94,22 +95,24 @@ export function AppContextProvider({ children }) {
     }, [user]);
 
     useEffect(() => {
-        const dateCurrent = new Date();
-
-        const day = dateCurrent.getDate();
-        const month = dateCurrent.getMonth() + 1;
-        const year = dateCurrent.getFullYear();
-
-        const dataString = `${day}${month}${year}`;
-
-        const semente = parseInt(dataString);
-
-        seedrandom(semente, { global: true });
-
-        const numeroAleatorio = Math.floor(Math.random() * 152);
-
-        setRandomPoke(numeroAleatorio);
-    }, []);
+        if(user) {
+            const dateCurrent = new Date();
+    
+            const day = dateCurrent.getDate();
+            const month = dateCurrent.getMonth() + 1;
+            const year = dateCurrent.getFullYear();
+    
+            const dataString = `${day}${month}${year}`;
+    
+            const semente = parseInt(dataString);
+    
+            seedrandom(semente, { global: true });
+    
+            const numeroAleatorio = Math.floor(Math.random() * 152);
+    
+            setRandomPoke(numeroAleatorio);
+        }
+    }, [user]);
 
     useEffect(() => {
         if (randomPoke)
@@ -136,6 +139,39 @@ export function AppContextProvider({ children }) {
         if(Object.keys(alternatives).length <= 0 && randomPoke)
             handlePokemonsListDefault();
     }, [alternatives, randomPoke]);
+
+    useEffect(() => {
+        if(randomPoke)
+            handlePokemonsListDefault();
+    }, [randomPoke, baseUser]);
+
+    useEffect(() => {
+        if(user) {
+            const baseRef = ref(database, `users/${user.uid}/game`);
+    
+            const handleSetHistoric = onValue(baseRef, data => {
+                const dataValues = data.val();
+    
+                const dataList = [];
+                for (let id in dataValues) {
+                    dataList.push({ ...dataValues[id] });
+                }
+
+                let pokesObj = {};
+                dataList.forEach(item => {
+                    Object.keys(item).forEach(key => {
+                        pokesObj[key] = item[key];
+                    });
+                });
+                
+                setBaseUser(pokesObj);
+            }, {
+                onlyOnce: true
+            });
+    
+            return () => { handleSetHistoric() };
+        }
+    }, [user])
 
     return (
         <AppContext.Provider value={{

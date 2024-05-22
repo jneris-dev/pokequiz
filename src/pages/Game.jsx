@@ -136,6 +136,15 @@ export function Game() {
         }
     }, [history])
 
+    const shuffleArray = array => {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
+    }
+
     return (
         <main className="background relative min-h-screen w-full flex flex-col items-center md:py-6 py-5 px-5">
             <UserMenu userMenu={userMenu} setUserMenu={setUserMenu} />
@@ -181,7 +190,7 @@ export function Game() {
                     </audio>
                 </div>
                 <div className={`grid md:grid-cols-2 grid-cols-1 gap-4 w-full md:mt-8 mt-5 relative group${loading ? ' loading' : ''}`}>
-                    {alternatives.map((a, i) => {                
+                    {alternatives && Object.keys(alternatives).length > 0 && alternatives.map((a, i) => {                
                         return (
                             <BtnSelect
                                 key={i}
