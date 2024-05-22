@@ -20,7 +20,7 @@ export function Game() {
     const [select, setSelect] = useState('')
     const [status, setStatus] = useState('')
     const [userMenu, setUserMenu] = useState('')
-    const [verify, setVerify] = useState('');
+    const [verify, setVerify] = useState(null);
     const [baseUser, setBaseUser] = useState([]);
     const [history, setHistory] = useState({})
     const [loading, setLoading] = useState(false)
@@ -132,6 +132,7 @@ export function Game() {
                 setStatus(select)
             else
                 setStatus('failed')
+
         }
     }, [history])
 

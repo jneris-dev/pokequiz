@@ -15,6 +15,8 @@ export function AppContextProvider({ children }) {
     const [randomPoke, setRandomPoke] = useState('')
     const [user, setUser] = useState(null)
 
+    let pokesUser = JSON.parse(localStorage.getItem('@PokesUser'));
+
     async function handlePokemonsListDefault() {
         const response = await api.get('/pokemon', {
             params: {
@@ -22,12 +24,24 @@ export function AppContextProvider({ children }) {
             },
         });
 
-        var alts = [
-            response.data.results[randomPoke - 1].name,
-            response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
-            response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
-            response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
-        ];
+        let index = convertDate(new Date())
+
+        var alts = []
+
+        if(Object.keys(pokesUser).length > 0 && pokesUser[index])
+            alts = [
+                response.data.results[randomPoke - 1].name,
+                pokesUser[index].selected,
+                response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
+                response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
+            ];
+        else
+            alts = [
+                response.data.results[randomPoke - 1].name,
+                response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
+                response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
+                response.data.results[Math.floor(Math.random() * (150 - 0 + 1) + 0)].name,
+            ];
 
         setAlternative(
             alts.map(value => ({ value, sort: Math.random() })).sort((a, b) => a.sort - b.sort).map(({ value }) => value)
