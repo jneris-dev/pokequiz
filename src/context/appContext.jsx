@@ -28,7 +28,7 @@ export function AppContextProvider({ children }) {
         if(Object.keys(baseUser).length > 0 && baseUser[index]) {
             var alts = [
                 response.data.results[randomPoke - 1].name,
-                baseUser[index].selected,
+                baseUser[index].selected === response.data.results[randomPoke - 1].name ? response.data.results.filter(poke => poke.name !== response.data.results[randomPoke - 1].name && poke.name !== baseUser[index].selected)[Math.floor(Math.random() * (148 - 0 + 1) + 0)].name : baseUser[index].selected,
                 response.data.results.filter(poke => poke.name !== response.data.results[randomPoke - 1].name && poke.name !== baseUser[index].selected)[Math.floor(Math.random() * (148 - 0 + 1) + 0)].name,
                 response.data.results.filter(poke => poke.name !== response.data.results[randomPoke - 1].name && poke.name !== baseUser[index].selected)[Math.floor(Math.random() * (148 - 0 + 1) + 0)].name,
             ];

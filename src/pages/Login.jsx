@@ -1,9 +1,15 @@
-import { Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { Navigate, useLocation } from "react-router-dom";
 
 import { useAppContext } from "../context/appContext";
 
 export function Login() {
+    let location = useLocation()
     const { handleSignIn, signed } = useAppContext();
+
+    useEffect(() => {
+        localStorage.clear()
+    }, [location])
 
     if(signed)
         return <Navigate to="/game" />
