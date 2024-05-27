@@ -148,12 +148,10 @@ export function Game() {
     return (
         <main className="background relative min-h-screen w-full flex flex-col items-center md:py-6 py-5 px-5">
             <UserMenu userMenu={userMenu} setUserMenu={setUserMenu} />
-            <div className="w-full max-w-[800px] flex flex-col justify-center items-center">
-                <h1 className="md:text-6xl text-3xl poke-font">
-                    Quem é esse pokémon?
-                </h1>
+            <div className="w-full max-w-[800px] flex flex-col justify-center items-center md:pt-0 pt-16">
+                <img src="/assets/quem-e-esse-pokemon.png" className="max-w-[600px] w-full h-auto" alt="Quem é esse pokémon?" title="Quem é esse pokémon?" />
                 <div className="w-full relative flex flex-col justify-center items-center">
-                    <figure className="relative flex items-center justify-center w-[650px] max-w-full md:h-[600px] h-[400px] select-none">
+                    <figure className="relative flex items-center justify-center w-[650px] max-w-full md:h-[550px] h-[400px] select-none">
                         <img src="/assets/flash.png" className="flash absolute inset-0 max-w-full h-full mx-auto pointer-events-none" alt="" />
                         {pokemon ?
                             <img
@@ -165,14 +163,14 @@ export function Game() {
                             null
                         }
                     </figure>
-                    <div className="relative md:-mt-16 -mt-8 w-full max-w-[650px] flex items-center justify-center gap-3 select-none">
+                    <div className="relative md:-mt-12 -mt-8 w-full max-w-[650px] flex items-center justify-center gap-3 select-none">
                         {pokemon && pokemon.type ? 
                             pokemon.type.map((t, i) => {
                                 return (
                                     <div key={i}>
                                         <img
                                             src={'/assets/types/' + t.type.name + '.png'}
-                                            className={`max-w-full lg:w-20 md:w-16 w-12 h-auto pointer-events-none transition-all duration-500${select ? '' : ' ocult'}`}
+                                            className={`max-w-full lg:w-18 md:w-16 w-12 h-auto pointer-events-none transition-all duration-500${select ? '' : ' ocult'}`}
                                             alt=""
                                         />
                                     </div>

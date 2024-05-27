@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { onValue, ref, set } from "firebase/database";
 import seedrandom from 'seedrandom';
 
-import { database, signInWithGooglePopup, signOutUserApp } from "../utils/firebase.utils"
+import { database, signInWithGithubPopup, signInWithGooglePopup, signOutUserApp } from "../utils/firebase.utils"
 import api from "../services/api";
 
 const AppContext = createContext({})
@@ -60,8 +60,9 @@ export function AppContextProvider({ children }) {
         return date
     }
 
-    async function handleSignIn() {
-        const response = await signInWithGooglePopup();
+    async function handleSignIn(params) {
+        const response = params === 'google' ? await signInWithGooglePopup() : params === 'github' ? await signInWithGithubPopup() : null;
+
         setUser(response.user)
         sessionStorage.setItem("@AuthFirebase:token", response.user.accessToken)
         sessionStorage.setItem("@AuthFirebase:user", JSON.stringify(response.user))
