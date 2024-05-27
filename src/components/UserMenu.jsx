@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useAppContext } from "../context/appContext";
 
 export function UserMenu({userMenu, setUserMenu}) {
-    const { handleSignOut, user } = useAppContext();
+    const { handleSignOut, user, baseUser } = useAppContext();
 
     useEffect(() => {
         const dropdownButton = document.getElementById('dropdown-button');
@@ -18,21 +18,23 @@ export function UserMenu({userMenu, setUserMenu}) {
     }, [])
 
     return (
-        <div className="absolute z-10 right-5 top-6">
+        <div className="absolute z-20 right-5 top-6">
             <button
                 id="dropdown-button"
                 type="button"
                 onClick={() => setUserMenu(!userMenu)}
-                className="p-1 bg-neutral-50/30 rounded-full overflow-hidden hover:bg-neutral-50/40 transition-all md:w-16 md:h-16 w-12 h-12"
+                className="p-1 bg-neutral-50/30 rounded-full overflow-hidden hover:bg-neutral-50/40 transition-all md:w-16 md:h-16 w-14 h-14"
             >
-                {user.photoURL ?
+                {user && user.photoURL ?
                     <img src={user.photoURL} className="max-w-full h-auto rounded-full" alt="" />
-                :
+                : user ?
                     <div className="w-full h-full bg-neutral-50/30 rounded-full flex items-center justify-center">
                         <span className="font-bold text-4xl leading-none text-white">
                             {user.displayName.substring(0, 1)}
                         </span>
                     </div>
+                :
+                null
                 }
             </button>
             <div
@@ -40,8 +42,19 @@ export function UserMenu({userMenu, setUserMenu}) {
                 className={`${userMenu ? 'block' : 'hidden'} origin-top-right absolute right-0 mt-2 w-36 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5`}
             >
                 <div className="py-2 p-2" role="menu" aria-orientation="vertical" aria-labelledby="dropdown-button">
+                    <div className="flex rounded-md px-4 py-2 text-sm text-gray-700 font-medium">
+                        Moedas: {Object.values(baseUser).filter(a => a.answer === true).length}
+                    </div>
+                    <hr className="my-1" />
                     <Link
-                        to={''}
+                        to={'/'}
+                        onClick={() => setUserMenu(false)}
+                        className="flex rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-blue-100 cursor-pointer" role="menuitem"
+                    >
+                        Jogar
+                    </Link>
+                    <Link
+                        to={'/profile'}
                         onClick={() => setUserMenu(false)}
                         className="flex rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-blue-100 cursor-pointer" role="menuitem"
                     >
@@ -53,13 +66,6 @@ export function UserMenu({userMenu, setUserMenu}) {
                         className="flex rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-blue-100 cursor-pointer" role="menuitem"
                     >
                         Loja
-                    </Link>
-                    <Link
-                        to={''}
-                        onClick={() => setUserMenu(false)}
-                        className="flex rounded-md px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 active:bg-blue-100 cursor-pointer" role="menuitem"
-                    >
-                        Sobre
                     </Link>
                     <hr className="my-1" />
                     <button

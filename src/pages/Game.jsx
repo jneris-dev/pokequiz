@@ -19,7 +19,7 @@ export function Game() {
 
     const [select, setSelect] = useState('')
     const [status, setStatus] = useState('')
-    const [userMenu, setUserMenu] = useState('')
+    const [userMenu, setUserMenu] = useState(false)
     const [verify, setVerify] = useState(null);
     const [baseUser, setBaseUser] = useState([]);
     const [history, setHistory] = useState({})
@@ -80,26 +80,28 @@ export function Game() {
     }
 
     useEffect(() => {
-        const baseRef = ref(database, `users/${user.uid}/game`);
-
-        setLoading(true)
-
-        const handleSetHistoric = onValue(baseRef, data => {
-            const dataValues = data.val();
-
-            const dataList = [];
-            for (let id in dataValues) {
-                dataList.push({ ...dataValues[id] });
-            }
-            setBaseUser(dataList);
-
-            setLoading(false)
-        }, {
-            onlyOnce: true
-        });
-
-        return () => { handleSetHistoric() };
-    }, [location, select])
+        if(user) {
+            const baseRef = ref(database, `users/${user.uid}/game`);
+    
+            setLoading(true)
+    
+            const handleSetHistoric = onValue(baseRef, data => {
+                const dataValues = data.val();
+    
+                const dataList = [];
+                for (let id in dataValues) {
+                    dataList.push({ ...dataValues[id] });
+                }
+                setBaseUser(dataList);
+    
+                setLoading(false)
+            }, {
+                onlyOnce: true
+            });
+    
+            return () => { handleSetHistoric() };
+        }
+    }, [location, select, user])
 
     useEffect(() => {
         let pokesObj = {};
@@ -135,15 +137,7 @@ export function Game() {
 
         }
     }, [history])
-
-    const shuffleArray = array => {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
-    }
+    
 
     return (
         <main className="background relative min-h-screen w-full flex flex-col items-center md:py-6 py-5 px-5">

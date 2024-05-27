@@ -1,18 +1,17 @@
 import { useEffect } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 
 import { useAppContext } from "../context/appContext";
 
 export function Login() {
     let location = useLocation()
+
     const { handleSignIn, signed } = useAppContext();
 
     useEffect(() => {
-        localStorage.clear()
-    }, [location])
-
-    if(signed)
-        return <Navigate to="/game" />
+        if(!signed)
+            localStorage.clear()
+    }, [location, signed])
 
     return (
         <main className="background relative h-full min-h-screen w-full flex flex-col items-center px-3">  

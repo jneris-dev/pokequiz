@@ -10,6 +10,9 @@ const AppContext = createContext({})
 export function AppContextProvider({ children }) {
     const NUMBER_POKEMONS = 151;
 
+    const sessionToken = sessionStorage.getItem("@AuthFirebase:token") || null
+    const sessionUser = sessionStorage.getItem("@AuthFirebase:user") || null
+
     const [pokemon, setPokemon] = useState({});
     const [alternatives, setAlternative] = useState([])
     const [randomPoke, setRandomPoke] = useState('')
@@ -79,11 +82,9 @@ export function AppContextProvider({ children }) {
     }
 
     useEffect(() => {
-        const sessionToken = sessionStorage.getItem("@AuthFirebase:token")
-        const sessionUser = sessionStorage.getItem("@AuthFirebase:user")
-
-        sessionToken && sessionUser ? setUser(JSON.parse(sessionUser)) : setUser(null)
-    }, []);
+        if(!user && sessionUser)
+            setUser(JSON.parse(sessionUser))
+    }, [user, sessionUser]);
 
     useEffect(() => {
         if(user)
@@ -184,7 +185,8 @@ export function AppContextProvider({ children }) {
             user,
             signed: !!user,
             handleSignIn,
-            handleSignOut
+            handleSignOut,
+            baseUser
         }}>
             {children}
         </AppContext.Provider>

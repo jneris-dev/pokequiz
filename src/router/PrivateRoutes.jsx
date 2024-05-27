@@ -1,8 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useAppContext } from "../context/appContext";
 
 export function PrivateRoutes() {
-    const { signed } = useAppContext()
+    const sessionToken = sessionStorage.getItem("@AuthFirebase:token") || null
 
-    return signed ? <Outlet /> : <Navigate to="/" />;
+    return sessionToken ? <Outlet /> : <Navigate to="/login" />;
 }
