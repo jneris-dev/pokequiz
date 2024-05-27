@@ -33,7 +33,7 @@ export function Profile() {
                                         <img src={poke.pokemon_of_day.image} className="max-w-full h-auto opacity-80" alt={poke.pokemon_of_day.name} />
                                     </figure>
                                     <div className="bg-neutral-100 border rounded-full py-1 px-4 font-medium text-sm">
-                                        {moment(Object.keys(baseUser)[key]).format('DD.MM.YYYY')}
+                                        {moment(Object.keys(baseUser).slice(0).reverse()[key]).format('DD.MM.YYYY')}
                                     </div>
                                 </div>
                             )
