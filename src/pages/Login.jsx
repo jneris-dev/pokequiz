@@ -1,16 +1,19 @@
 import { useEffect } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import { useAppContext } from "../context/appContext";
 
 export function Login() {
-    let location = useLocation()
+    let location = useLocation();
+    let navigate = useNavigate();
 
     const { handleSignIn, signed } = useAppContext();
 
     useEffect(() => {
         if(!signed)
             localStorage.clear()
+        else
+            navigate('/')
     }, [location, signed])
 
     return (

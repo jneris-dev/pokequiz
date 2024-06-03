@@ -18,6 +18,7 @@ export function AppContextProvider({ children }) {
     const [randomPoke, setRandomPoke] = useState('')
     const [user, setUser] = useState(null)
     const [baseUser, setBaseUser] = useState({});
+    const [loadingDataUser, setLoadingDataUser] = useState(false)
 
     async function handlePokemonsListDefault() {
         const response = await api.get('/pokemon', {
@@ -148,7 +149,7 @@ export function AppContextProvider({ children }) {
     }, [randomPoke, baseUser]);
 
     useEffect(() => {
-        if(user) {
+        if(user && loadingDataUser) {
             const baseRef = ref(database, `users/${user.uid}/game`);
     
             const handleSetHistoric = onValue(baseRef, data => {
@@ -167,13 +168,14 @@ export function AppContextProvider({ children }) {
                 });
                 
                 setBaseUser(pokesObj);
+                setLoadingDataUser(false)
             }, {
                 onlyOnce: true
             });
     
             return () => { handleSetHistoric() };
         }
-    }, [user])
+    }, [user, loadingDataUser])
 
     return (
         <AppContext.Provider value={{
@@ -186,7 +188,9 @@ export function AppContextProvider({ children }) {
             signed: !!user,
             handleSignIn,
             handleSignOut,
-            baseUser
+            baseUser,
+            loadingDataUser,
+            setLoadingDataUser
         }}>
             {children}
         </AppContext.Provider>

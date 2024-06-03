@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { useAppContext } from "../context/appContext";
 
 export function UserMenu({userMenu, setUserMenu}) {
-    const { handleSignOut, user, baseUser } = useAppContext();
+    const { handleSignOut, user, baseUser, setLoadingDataUser } = useAppContext();
 
     useEffect(() => {
         const dropdownButton = document.getElementById('dropdown-button');
@@ -16,6 +16,11 @@ export function UserMenu({userMenu, setUserMenu}) {
             }
         });
     }, [])
+
+    useEffect(() => {
+        if(user)
+            setLoadingDataUser(true)
+    }, [user])
 
     return (
         <div className="absolute z-20 right-5 top-6">

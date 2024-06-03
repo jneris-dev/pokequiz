@@ -20,9 +20,9 @@ export function Game() {
     const [select, setSelect] = useState('')
     const [status, setStatus] = useState('')
     const [userMenu, setUserMenu] = useState(false)
-    const [verify, setVerify] = useState(null);
-    const [baseUser, setBaseUser] = useState([]);
+    const [verify, setVerify] = useState(null)
     const [history, setHistory] = useState({})
+    const [dataUser, setDataUser] = useState([])
     const [loading, setLoading] = useState(false)
 
     function playVoice() {
@@ -92,7 +92,7 @@ export function Game() {
                 for (let id in dataValues) {
                     dataList.push({ ...dataValues[id] });
                 }
-                setBaseUser(dataList);
+                setDataUser(dataList);
     
                 setLoading(false)
             }, {
@@ -104,23 +104,27 @@ export function Game() {
     }, [location, select, user])
 
     useEffect(() => {
-        let pokesObj = {};
-
-        baseUser.forEach(item => {
-            Object.keys(item).forEach(key => {
-                pokesObj[key] = item[key];
+        if(dataUser.length > 0) {
+            let pokesObj = {};
+    
+            dataUser.forEach(item => {
+                Object.keys(item).forEach(key => {
+                    pokesObj[key] = item[key];
+                });
             });
-        });
-
-        localStorage.setItem("@PokesUser", JSON.stringify(pokesObj))
-    }, [baseUser])
+    
+            localStorage.setItem("@PokesUser", JSON.stringify(pokesObj))
+        }
+    }, [dataUser])
 
     useEffect(() => {
-        let pokesUser = localStorage.getItem('@PokesUser');
-
-        if (pokesUser)
-            setHistory(JSON.parse(pokesUser))
-    }, [baseUser])
+        if(dataUser.length > 0) {
+            let pokesUser = localStorage.getItem('@PokesUser');
+            
+            if (pokesUser)
+                setHistory(JSON.parse(pokesUser))
+        }
+    }, [dataUser])
 
     useEffect(() => {
         let index = convertDate(new Date())
@@ -191,7 +195,7 @@ export function Game() {
                                 status={status}
                                 verify={verify}
                                 history={history}
-                                baseUser={baseUser}
+                                dataUser={dataUser}
                                 pokemon={pokemon}
                                 handleSetOption={handleSetOption}
                                 playVoice={playVoice}
